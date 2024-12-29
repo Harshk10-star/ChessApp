@@ -1,0 +1,30 @@
+
+#black-tile{
+    width: 100px;
+    height: 100px;
+    background-color: #7a9db2;
+    text-align: center;
+    position: relative;
+}
+
+#white-tile{
+    width: 100px;
+    height: 100px;
+    background-color:#c5d5dc;
+  
+    text-align: center;
+    position: relative;
+    
+}
+
+
+img{
+    width: 70px;
+    height: 80px;
+    background-color: initial;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+   
+}

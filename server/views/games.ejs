@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>List of Chess Games</title>
+</head>
+<body>
+    <h1>List of Chess Games</h1>
+    <ul>
+        <% games.forEach(function(game) { %>
+         
+            <li><a href="http://localhost:3000/chess-game/<%= game._id %>?moves=<%= encodeURIComponent(JSON.stringify(game.movesP)) %>"><%= game._id %></a></li>
+        <% }); %>
+    </ul>
+</body>
+</html>

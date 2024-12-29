@@ -1,0 +1,39 @@
+*{
+   background-color:black;
+   place-content: center;
+   display: block;
+}
+#prom{
+   display: block;
+}
+#app{
+   display: grid;
+   place-content: center;
+
+}
+.button{
+   background-color: aqua;
+
+   
+}
+#cen{
+   text-align: center;
+}
+#reset{
+   background-color: aqua;
+}
+#save{
+   background-color: blue;
+}
+
+#pawn-promotion{
+   height: 300px;
+   background-color: aqua;
+   margin-left: 544px;
+   width: 800px;
+
+}
+
+img{
+   display:block;
+}

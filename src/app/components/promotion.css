@@ -1,0 +1,14 @@
+* {
+  box-sizing: border-box;
+}
+
+.row {
+  display: flex; flex-wrap: wrap;
+}
+
+img{
+  flex: 1; margin-right: 5px;
+}
+
+
+  
