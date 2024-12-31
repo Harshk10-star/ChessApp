@@ -1,13 +1,10 @@
-// app.js
 const express= require('express');
 const ejs= require('ejs');
 const cors= require("cors");
 const bcrypt = require('bcrypt');
-const saltRounds = 10;
 var bodyParser = require('body-parser');
 const app= express();
 
-// 1) Import the pool
 const pool = require('./db.js');
 
 app.set('views', __dirname + '/views');
@@ -17,17 +14,71 @@ app.use(cors());
 app.use(express.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
-app.get('/games', async (req, res) => {
+// GET /users/:id
+// Fetch a user from the "users" table by their id
+app.get('/users/:id', async (req, res) => {
   try {
-    // Example: Query games
-    const [games] = await pool.query('SELECT * FROM games');
-    res.json(games);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Database error' });
+    const userId = req.params.id; 
+  
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing user ID parameter' });
+    }
+    
+    const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [userId]);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    } 
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    return res.status(500).json({ error: 'Database error' });
   }
 });
 
+// GET /games/:userId
+// Fetch games for a given user from the `games` table
+app.get('/games/:userId', async (req, res) => {
+  const userId = req.params.userId;
+
+  if (!userId) {
+    return res.status(400).json({ error: "Missing user ID parameter" });
+  }
+
+  try {
+    const [result] = await pool.query(
+      'SELECT * FROM games WHERE white_player_id = ? OR black_player_id = ?',
+      [userId, userId]
+    );
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: 'No games found for that user' });
+    }
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error('Error fetching games:', err);
+    return res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// GET /moves/:gameId
+// FETCH moves of a game with gameID from moves table
+app.get('/moves/:gameId', async(req,res)=> {
+  const gameID = req.params.gameId;
+
+  if(!gameID)  return res.status(400).json({error: 'Missing gameId'});
+
+  try{
+    const [result] = await pool.query('SELECT * from moves WHERE game_id = ? ORDER BY move_number',[gameID]);
+
+    if(result.length == 0) res.status(404).json({error: 'No moves found for this game'});
+    return res.status(200).json({result});
+  } catch (err){
+    console.error('Error fetching moves for game:', err);
+    return res.status(500).json({ error: 'Database error' });
+  }
+})
 /*
 req.body
 {
@@ -40,27 +91,23 @@ app.post('/user', async (req, res) => {
   try {
     const { username, email, password } = req.body;
     
-    // 1) Validate input (basic example)
     if (!username || !email || !password) {
       return res.status(400).json({ error: 'Missing fields' });
     }
 
-    // 2) Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3) Insert into the users table
     const sql = 'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)';
     const [result] = await pool.query(sql, [username, email, hashedPassword]);
 
-    // result.insertId is the auto-increment ID of the newly inserted user
-    res.status(201).json({ 
+    return res.status(201).json({ 
       success: true,
       userId: result.insertId,
       message: 'User created successfully' 
     });
   } catch (error) {
     console.error('Error inserting user:', error);
-    res.status(500).json({ error: 'Database error' });
+    return res.status(500).json({ error: 'Database error' });
   }
 });
 
@@ -80,22 +127,20 @@ app.post('/games', async (req, res) => {
       return res.status(400).json({ error: 'Missing white_player_id or black_player_id.' });
     }
 
-    // Insert a row in the games table
     const sql = `
       INSERT INTO games (white_player_id, black_player_id, winner_id)
       VALUES (?, ?, ?)
     `;
     const [result] = await pool.query(sql, [white_player_id, black_player_id, winner_id]);
 
-    // Return the new game's ID
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       gameId: result.insertId,
       message: 'New game created successfully.'
     });
   } catch (error) {
     console.error('Error creating new game:', error);
-    res.status(500).json({ error: 'Database error' });
+    return res.status(500).json({ error: 'Database error' });
   }
 });
 
@@ -159,7 +204,6 @@ app.post('/moves/bulk', async (req, res) => {
           captured_piece
         } = move;
 
-        // Basic validation (optional, or expand as needed)
         if (
           !game_id || 
           !player_id ||
@@ -185,7 +229,7 @@ app.post('/moves/bulk', async (req, res) => {
       // If all inserts succeeded, commit
       await connection.commit();
 
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         message: 'All moves inserted successfully.'
       });
@@ -198,10 +242,20 @@ app.post('/moves/bulk', async (req, res) => {
     }
   } catch (error) {
     console.error('Error in /moves/bulk route:', error);
-    res.status(500).json({ error: 'Database error' });
+    return res.status(500).json({ error: 'Database error' });
   }
 });
 
-app.listen(3001, () => {
-  console.log("Server is running on port 3001!");
+
+const http = require('http');
+const server = http.createServer(app);
+
+const { Server } = require('socket.io');
+const io = new Server(server, {
+  cors: { origin: '*' }
+});
+
+
+server.listen(3001, () => {
+  console.log('Server is running (Express + Socket.io) on port 3001');
 });
