@@ -256,6 +256,14 @@ const io = new Server(server, {
 });
 
 
+io.on("connection", (socket)=>{
+
+  socket.on('joinRoom', (gameId)=> {
+    socket.join(gameId);
+  })
+
+})
+
 server.listen(3001, () => {
   console.log('Server is running (Express + Socket.io) on port 3001');
 });
