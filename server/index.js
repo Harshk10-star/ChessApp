@@ -4,7 +4,7 @@ const cors= require("cors");
 const bcrypt = require('bcrypt');
 var bodyParser = require('body-parser');
 const app= express();
-
+const redis = require('redis');
 const pool = require('./db.js');
 
 app.set('views', __dirname + '/views');
@@ -13,6 +13,28 @@ app.use(express.static('public'));
 app.use(cors());
 app.use(express.json());
 app.use(bodyParser.urlencoded({extended: true}));
+
+// Initialize Redis client
+const redisClient = redis.createClient({
+  host: 'localhost', // Update if Redis is hosted elsewhere
+  port: 6379,        // Default Redis port
+  // password: 'your_redis_password', 
+});
+
+
+const { promisify } = require('util');
+const lpopAsync = promisify(redisClient.lpop).bind(redisClient);
+const rpushAsync = promisify(redisClient.rpush).bind(redisClient);
+const lremAsync = promisify(redisClient.lrem).bind(redisClient);
+
+
+redisClient.on('connect', () => {
+  console.log('Connected to Redis');
+});
+
+redisClient.on('error', (err) => {
+  console.error('Redis error:', err);
+});
 
 // GET /users/:id
 // Fetch a user from the "users" table by their id
@@ -246,24 +268,236 @@ app.post('/moves/bulk', async (req, res) => {
   }
 });
 
-
 const http = require('http');
-const server = http.createServer(app);
-
+const serverInstance = http.createServer(app);
 const { Server } = require('socket.io');
-const io = new Server(server, {
-  cors: { origin: '*' }
+const io = new Server(serverInstance, {
+  cors: { origin: '*' } // Update with your frontend URL in production for security
 });
 
+const userSockets = {};
 
-io.on("connection", (socket)=>{
+const games = {};
 
-  socket.on('joinRoom', (gameId)=> {
+const createGameRecord = async (whitePlayerId, blackPlayerId) => {
+  try {
+    const [result] = await pool.query(
+      'INSERT INTO games (white_player_id, black_player_id, status, winner_id, created_at) VALUES (?, ?, ?, ?, NOW())',
+      [whitePlayerId, blackPlayerId, 'in_progress', null]
+    );
+    return result.insertId; 
+  } catch (error) {
+    console.error('Error creating game record:', error);
+    throw error;
+  }
+};
+
+const insertMove = async (gameId, playerId, moveNumber, piece, fromSquare, toSquare, capturedPiece) => {
+  try {
+    await pool.query(
+      'INSERT INTO moves (game_id, player_id, move_number, piece, from_square, to_square, captured_piece) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [gameId, playerId, moveNumber, piece, fromSquare, toSquare, capturedPiece]
+    );
+  } catch (error) {
+    console.error('Error inserting move:', error);
+    throw error;
+  }
+};
+
+const getNextMoveNumber = async (gameId) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT COUNT(*) as moveCount FROM moves WHERE game_id = ?',
+      [gameId]
+    );
+    return rows[0].moveCount + 1;
+  } catch (error) {
+    console.error('Error getting next move number:', error);
+    throw error;
+  }
+};
+
+io.on("connection", (socket) => {
+  console.log(`User connected: ${socket.id}`);
+
+  socket.on('authenticate', (data) => {
+    const { userId } = data;
+    if (userId) {
+      userSockets[userId] = socket.id;
+      socket.userId = userId; 
+      console.log(`User authenticated: ${userId}`);
+      socket.emit('authenticated', { success: true });
+    } else {
+      socket.emit('authenticated', { success: false, message: 'Invalid userId' });
+    }
+  });
+
+  // Listen for 'findGame' event
+  socket.on('findGame', async () => {
+    const userId = socket.userId;
+    if (!userId) {
+      socket.emit('error', { message: 'User not authenticated' });
+      return;
+    }
+
+    try {
+      const matchedUserId = await lpopAsync('waitingPlayers');
+
+      if (matchedUserId && matchedUserId !== userId) {
+        // Match found, create a game
+        const gameId = await createGameRecord(userId, matchedUserId);
+
+        // Store game details
+        games[gameId] = {
+          players: [userId, matchedUserId],
+          createdAt: Date.now(),
+          status: 'in_progress',
+        };
+
+        // Notify both players
+        const matchedSocketId = userSockets[matchedUserId];
+        if (matchedSocketId) {
+          io.to(matchedSocketId).emit('gameMatched', { gameId, opponent: userId });
+          // Optionally, join both sockets to a Socket.io room
+          io.to(matchedSocketId).socketsJoin(`game_${gameId}`);
+        }
+
+        io.to(socket.id).emit('gameMatched', { gameId, opponent: matchedUserId });
+        socket.join(`game_${gameId}`);
+
+        console.log(`Game created: ${gameId} between ${userId} and ${matchedUserId}`);
+      } else {
+        // No match found, add the current user to the waiting queue
+        await rpushAsync('waitingPlayers', userId);
+        socket.emit('waitingForMatch', { message: 'Waiting for an opponent...' });
+        console.log(`User ${userId} added to waitingPlayers queue`);
+      }
+    } catch (error) {
+      console.error('Error during matchmaking:', error);
+      socket.emit('error', { message: 'Matchmaking failed' });
+    }
+  });
+
+  // Handle 'makeMove' event
+  socket.on('makeMove', async (data) => {
+    const { gameId, move } = data; // move should include necessary details
+    const userId = socket.userId;
+
+    if (!gameId || !move) {
+      socket.emit('error', { message: 'Invalid move data' });
+      return;
+    }
+
+    const game = games[gameId];
+    if (!game) {
+      socket.emit('error', { message: 'Game not found' });
+      return;
+    }
+
+    // Determine opponent
+    const opponentId = game.players.find(id => id !== userId);
+    if (!opponentId) {
+      socket.emit('error', { message: 'Opponent not found' });
+      return;
+    }
+
+    const opponentSocketId = userSockets[opponentId];
+    if (opponentSocketId) {
+      // Broadcast the move to the opponent
+      io.to(opponentSocketId).emit('opponentMove', { move });
+      console.log(`Move from ${userId} to ${opponentId} in game ${gameId}:`, move);
+    } else {
+      socket.emit('error', { message: 'Opponent disconnected' });
+    }
+
+    // Insert move into the database - maybe?
+  });
+
+  // Handle 'endGame' event
+  socket.on('endGame', async (data) => {
+    const { gameId, winnerId } = data;
+    const game = games[gameId];
+    if (!game) {
+      socket.emit('error', { message: 'Game not found' });
+      return;
+    }
+
+    try {
+      // Update game status in the database
+      await pool.query(
+        'UPDATE games SET status = ?, winner_id = ? WHERE id = ?',
+        ['completed', winnerId, gameId]
+      );
+
+      // Notify both players
+      game.players.forEach(playerId => {
+        const socketId = userSockets[playerId];
+        if (socketId) {
+          io.to(socketId).emit('gameEnded', { gameId, winnerId });
+        }
+      });
+
+      // Remove the game from the in-memory store
+      delete games[gameId];
+      console.log(`Game ${gameId} ended. Winner: ${winnerId}`);
+    } catch (error) {
+      console.error('Error ending game:', error);
+      socket.emit('error', { message: 'Failed to end game' });
+    }
+  });
+
+  // Handle 'joinRoom' event (optional, as rooms are handled during matchmaking)
+  socket.on('joinRoom', (gameId) => {
     socket.join(gameId);
-  })
+    console.log(`User ${socket.userId} joined room ${gameId}`);
+  });
 
-})
+  // Handle user disconnect
+  socket.on('disconnect', async () => {
+    console.log(`User disconnected: ${socket.id}`);
+    const userId = socket.userId;
 
+    if (userId) {
+      // Remove user from userSockets mapping
+      delete userSockets[userId];
+
+      // Remove user from waitingPlayers queue if present
+      try {
+        // Remove all occurrences of userId from 'waitingPlayers'
+        await lremAsync('waitingPlayers', 0, userId);
+        console.log(`User ${userId} removed from waitingPlayers queue`);
+      } catch (error) {
+        console.error('Error removing user from waitingPlayers:', error);
+      }
+
+      // Check if user was in any ongoing games
+      for (const [gameId, game] of Object.entries(games)) {
+        if (game.players.includes(userId)) {
+          const opponentId = game.players.find(id => id !== userId);
+          const opponentSocketId = userSockets[opponentId];
+          if (opponentSocketId) {
+            // Notify opponent that the user has disconnected
+            io.to(opponentSocketId).emit('opponentDisconnected', { message: 'Opponent has disconnected.' });
+          }
+          // Optionally, delete the game or mark it as ended
+          delete games[gameId];
+          console.log(`Game ${gameId} ended due to disconnection of ${userId}`);
+
+          // Update game status in the database
+          try {
+            await pool.query(
+              'UPDATE games SET status = ?, winner_id = ? WHERE id = ?',
+              ['completed', opponentId, gameId]
+            );
+            console.log(`Game ${gameId} marked as completed. Winner: ${opponentId}`);
+          } catch (error) {
+            console.error('Error updating game status after disconnection:', error);
+          }
+        }
+      }
+    }
+  });
+});
 server.listen(3001, () => {
   console.log('Server is running (Express + Socket.io) on port 3001');
 });
