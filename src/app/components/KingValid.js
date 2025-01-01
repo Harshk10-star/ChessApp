@@ -5,6 +5,7 @@ async function kingValid(arr,x,y,turn,selectedPiece,kingPos,setKingPos,whiteKing
   if(checkM===false && selectedPiece && arr[selectedPiece.x][selectedPiece.y] === null) return false; 
   if( checkM===false && selectedPiece && arr[x][y]!=null && arr[selectedPiece.x][selectedPiece.y].charAt(0) === arr[x][y].charAt(0)) return false;
   if(checkM==true && arr[x][y]!=null && arr[kingPos[0]][kingPos[1]].charAt(0) === arr[x][y].charAt(0)) return false;
+    console.log("on here? king?")
     let diffX;
     let diffY;
     if(checkM == true){
