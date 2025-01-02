@@ -3,6 +3,9 @@ const ejs= require('ejs');
 const cors= require("cors");
 const bcrypt = require('bcrypt');
 var bodyParser = require('body-parser');
+
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 const app= express();
 const redis = require('redis');
 const pool = require('./db.js');
@@ -10,14 +13,19 @@ const pool = require('./db.js');
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000', 
+  credentials: true
+}));
 app.use(express.json());
 app.use(bodyParser.urlencoded({extended: true}));
-
+app.use(cookieParser());
+require('./prod.env').config();
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
 // Initialize Redis client
 const redisClient = redis.createClient({
-  host: 'localhost', // Update if Redis is hosted elsewhere
-  port: 6379,        // Default Redis port
+  host: 'localhost',
+  port: 6379,        
   // password: 'your_redis_password', 
 });
 
@@ -34,6 +42,84 @@ redisClient.on('connect', () => {
 
 redisClient.on('error', (err) => {
   console.error('Redis error:', err);
+});
+
+
+// POST /login - Authenticate a user and provide a JWT token
+app.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Please provide both email and password.' });
+    }
+
+  
+    const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+
+    if (rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+    }
+
+    const user = rows[0];
+
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+    }
+
+    // Generate a JWT token
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        username: user.username,
+        email: user.email,
+      },
+      JWT_SECRET,
+      { expiresIn: '24h' } // Token validity duration
+    );
+
+    // Set the token in an HTTP-only cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Set to true in production
+      sameSite: 'Strict',
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    });
+
+    // Respond with success
+    return res.status(200).json({
+      success: true,
+      message: 'Login successful.',
+    });
+  } catch (error) {
+    console.error('Error during login:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred during login.' });
+  }
+});
+
+const authenticateToken = (req, res, next) => {
+  const token = req.cookies.token;
+  if (!token) return res.status(401).json({ success: false, message: 'No token provided.' });
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ success: false, message: 'Invalid token.' });
+    req.user = user;
+    next();
+  });
+};
+
+//Protected endpoint
+app.get('/me', authenticateToken, (req, res) => {
+  return res.status(200).json({
+    success: true,
+    user: {
+      userId: req.user.userId,
+      username: req.user.username,
+      email: req.user.email,
+    },
+  });
 });
 
 // GET /users/:id
