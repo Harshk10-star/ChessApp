@@ -5,15 +5,15 @@ import Link from 'next/link';
 import axios from 'axios';
 import './App.css';
 import Board from './components/Board';
-import check from './components/Check';
-import pawnValid from './components/PawnValid';
-import rookValid from './components/RookValid';
-import knightValid from './components/KnightValid';
-import kingValid from './components/KingValid';
-import bishopValid from './components/BishopValid';
-import queenValid from './components/QueenValid';
+import check from './piece-logic/Check';
+import pawnValid from './piece-logic/PawnValid';
+import rookValid from './piece-logic/RookValid';
+import knightValid from './piece-logic/KnightValid';
+import kingValid from './piece-logic/KingValid';
+import bishopValid from './piece-logic/BishopValid';
+import queenValid from './piece-logic/QueenValid';
 import PromotionPawn from './components/PromotionPawn';
-import checkMate from './components/CheckMate';
+import checkMate from './piece-logic/CheckMate';
 import fetchGames from './components/fetchGames';
 
 function Main() {

@@ -1,5 +1,5 @@
 import React from 'react';
-import "../components/promotion.css";
+import "./promotion.css";
 
 
 function PromotionPawn({ onPieceSelected }) {
