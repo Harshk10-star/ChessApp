@@ -101,21 +101,24 @@ function Main() {
             // Determine the opponent's color and king position
             const opponentColor = turn === "white" ? "black" : "white";
             const opponentKingPos = opponentColor === "white" ? whiteKing : blackKing;
+            
             const meKindPos = turn === "white" ? whiteKing: blackKing;
+            console.log("white", whiteKing, blackKing)
             const meColor = turn;
+            
             console.log(meKindPos, "meKingPos");
             // Check if the opponent's king is in check
+            console.log(opponentKingPos, opponentColor, "this is waht is going to check parameters");
             const { check: isInCheck, pieceChecking } = check(
-                meColor,
-                opponentKingPos,
+                turn,
+                meKindPos,
                 positions,
-                setPieceCheck,
-                setCheck
+                setPieceCheck
             );
 
             setCheck(isInCheck);
             setPieceCheck(isInCheck ? pieceChecking : null);
-
+            console.log(isInCheck, "IS it check?");
             if (isInCheck) {
                 const mate = checkMate(opponentColor, meKindPos, pieceChecking, positions);
                 setCheckMate(mate);
@@ -160,6 +163,7 @@ function Main() {
      * @param {string|null} piece - Additional information (e.g., castling direction).
      */
     function setMoves(p, x, y, piece) {
+        
         switch (p) {
             case "queen":
                 if (queenValid(positions, x, y, turn, selectedPiece, turn === "white" ? whiteKing : blackKing, null, null, null, null, null, null)) {
@@ -182,6 +186,7 @@ function Main() {
                 }
                 break;
             case "king":
+                console.log(piece, "this is kinmg")
                 handleKingMove(piece, x, y);
                 break;
             case "pawn":
@@ -207,6 +212,7 @@ function Main() {
      */
     function handleKingMove(piece, x, y) {
         // Castling conditions
+       /*
         if (piece === "wking" && selectedPiece.x === 7 && selectedPiece.y === 4) {
             if (y === 6 && positions[7][6] === null && positions[7][7] === "wrook") {
                 updateWhiteKingPos(x, y);
@@ -230,9 +236,11 @@ function Main() {
                 return;
             }
         }
-
+        */
         // Regular king move validation
+        console.log("TURN IS", turn);
         if (kingValid(positions, x, y, turn, selectedPiece, turn === "white" ? whiteKing : blackKing, null, null, null, null, null, null)) {
+            console.log("MOVE IS ALLOWED");
             performMove(piece, x, y, "regular");
         }
     }

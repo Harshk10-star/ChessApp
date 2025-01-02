@@ -458,7 +458,6 @@ io.on("connection", (socket) => {
     const userId = socket.userId;
 
     if (userId) {
-      // Remove user from userSockets mapping
       delete userSockets[userId];
 
       // Remove user from waitingPlayers queue if present
@@ -476,14 +475,11 @@ io.on("connection", (socket) => {
           const opponentId = game.players.find(id => id !== userId);
           const opponentSocketId = userSockets[opponentId];
           if (opponentSocketId) {
-            // Notify opponent that the user has disconnected
             io.to(opponentSocketId).emit('opponentDisconnected', { message: 'Opponent has disconnected.' });
           }
-          // Optionally, delete the game or mark it as ended
           delete games[gameId];
           console.log(`Game ${gameId} ended due to disconnection of ${userId}`);
 
-          // Update game status in the database
           try {
             await pool.query(
               'UPDATE games SET status = ?, winner_id = ? WHERE id = ?',

@@ -18,7 +18,7 @@ import bishopValid from "./BishopValid";
 function checkMate(color, kingPos, pieceCheck, positions) {
     const opponentColorCode = color === "white" ? "w" : "b"; // 'w' for white, 'b' for black
     const enemyColorCode = color === "white" ? "b" : "w"; // Opponent's opponent color
-
+    const realColor = color === "white" ? "black": "white";
     console.log(`Evaluating checkmate for ${color} with king at (${kingPos[0]}, ${kingPos[1]})`);
 
     // 1. Check if the king has any legal moves to escape
@@ -28,16 +28,16 @@ function checkMate(color, kingPos, pieceCheck, positions) {
     }
 
     // 2. Gather all pieces of the opponent's color
-    const opponentPieces = gatherOwnPieces(opponentColorCode, positions);
+    const opponentPieces = gatherOwnPieces(enemyColorCode, positions);
 
     // 3. Check if any opponent's piece can capture the checking piece
-    if (canCaptureCheckingPiece(pieceCheck, opponentPieces, positions, color)) {
+    if (canCaptureCheckingPiece(pieceCheck, enemyColorCode, positions, realColor)) {
         console.log("A piece can capture the checking piece. Not checkmate.");
         return false; // Not checkmate
     }
 
     // 4. Check if any opponent's piece can block the check
-    if (canBlockCheck(pieceCheck, kingPos, opponentPieces, positions, color)) {
+    if (canBlockCheck(pieceCheck, kingPos, opponentPieces, positions, realColor)) {
         console.log("A piece can block the check. Not checkmate.");
         return false; // Not checkmate
     }
@@ -87,7 +87,7 @@ function canKingEscape(color, kingPos, positions) {
         if (newX >= 0 && newX < 8 && newY >= 0 && newY < 8) {
             const targetPiece = positions[newX][newY];
             // Check if the square is empty or occupied by an enemy piece
-            if (!targetPiece || targetPiece.charAt(0).toLowerCase() === enemyColorCode) {
+            if (!targetPiece || targetPiece.charAt(0).toLowerCase() === opponentColorCode) {
                 // Temporarily move the king to the new position and check if it's still in check
                 console.log(`Trying to move king to (${newX}, ${newY}) to escape.`);
                 const newPositions = JSON.parse(JSON.stringify(positions));

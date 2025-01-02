@@ -67,6 +67,7 @@ function check(
                     check = true;
                     pieceChecking = { x: a, y: b };
                     setPieceCheck(pieceChecking);
+                    console.log("FAILING WHILE LOOP ", pieceChecking)
                     return { check, pieceChecking };
                 }
                 break; // Blocked by other enemy piece
@@ -96,6 +97,7 @@ function check(
                 check = true;
                 pieceChecking = { x: px, y: py };
                 setPieceCheck(pieceChecking);
+                console.log("IN HERE PAWN")
                 return { check, pieceChecking };
             }
         }
@@ -130,6 +132,7 @@ function check(
                 check = true;
                 pieceChecking = { x: knightX, y: knightY };
                 setPieceCheck(pieceChecking);
+                console.log("HORSE WHILE")
                 return { check, pieceChecking };
             }
         }

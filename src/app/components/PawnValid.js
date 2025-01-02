@@ -117,12 +117,6 @@ function isKingInCheck(color, kingPos, newPositions) {
         kingPos,
         newPositions,
         () => {}, // No-op setters since we're only checking
-        color === "white" ? kingPos : [0, 4],
-        color === "black" ? kingPos : [7, 4],
-        () => {},
-        () => {},
-        () => {},
-        null
     );
 
     return checkResult;
