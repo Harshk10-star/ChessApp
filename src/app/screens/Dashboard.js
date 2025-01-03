@@ -38,6 +38,7 @@ const Dashboard = () => {
     // Handle gameMatched event
     newSocket.on('gameMatched', (data) => {
       const { gameId, opponent } = data;
+      newSocket.emit('joinRoom', {gameId});
       setGameId(gameId);
       setOpponent(opponent);
       setStatus(`Matched with ${opponent}. Game ID: ${gameId}`);

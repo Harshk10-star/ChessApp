@@ -1,6 +1,6 @@
 // Main.js
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import Link from 'next/link';
 import axios from 'axios';
 import './App.css';
@@ -14,11 +14,12 @@ import bishopValid from './piece-logic/BishopValid';
 import queenValid from './piece-logic/QueenValid';
 import PromotionPawn from './components/PromotionPawn';
 import checkMate from './piece-logic/CheckMate';
-import fetchGames from './components/fetchGames';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from './context/AuthContext';
+import { io } from 'socket.io-client';
 
 function Main() {
     const [promotion, setPromotion] = useState(false); // Initially no promotion
-    const [moves, setMoveArr] = useState([]);
     const [selected, setSelected] = useState(false);
     const [selectedPiece, setSelectedPiece] = useState(null);
     const [turn, setTurn] = useState("white");
@@ -32,6 +33,99 @@ function Main() {
     const [whiteCastle, setWhiteCastle] = useState(false);
     const [blackCastle, setBlackCastle] = useState(false);
 
+    const navigate = useNavigate();
+    const { user, logout } = useContext(AuthContext);
+    const [socket, setSocket] = useState(null);
+    const [status, setStatus] = useState('');
+    const [gameId, setGameId] = useState(null);
+    const [opponent, setOpponent] = useState(null);
+    const [moves, setMoves] = useState([]);
+    const [moveInput, setMoveInput] = useState('');
+    
+    useEffect(() => {
+        // Initialize Socket.io client
+        const newSocket = io('http://localhost:3001', {
+          withCredentials: true,
+        });
+    
+        setSocket(newSocket);
+    
+        // Authenticate the socket connection
+        newSocket.emit('authenticate', { token: null }); // Token is sent via cookies
+    
+        // Handle authentication response
+        newSocket.on('authenticated', (data) => {
+          if (data.success) {
+            console.log('Socket authenticated successfully.');
+          } else {
+            console.error('Socket authentication failed:', data.message);
+          }
+        });
+    
+        // Handle gameMatched event
+        newSocket.on('gameMatched', (data) => {
+          const { gameId, opponent } = data;
+          newSocket.emit('joinRoom', {gameId});
+          setGameId(gameId);
+          setOpponent(opponent);
+          setStatus(`Matched with ${opponent}. Game ID: ${gameId}`);
+        });
+    
+        // Handle waitingForMatch event
+        newSocket.on('waitingForMatch', (data) => {
+          setStatus(data.message);
+        });
+    
+        // Handle opponentMove event
+        newSocket.on('opponentMove', (data) => {
+          const { move } = data;
+          setMoves((prevMoves) => [...prevMoves, { player: opponent, move }]);
+        });
+    
+        // Handle gameEnded event
+        newSocket.on('gameEnded', (data) => {
+          const { gameId, winnerId } = data;
+          if (winnerId === user.userId) {
+            setStatus('You won the game!');
+          } else {
+            setStatus('You lost the game.');
+          }
+          setGameId(null);
+          setOpponent(null);
+          setMoves([]);
+        });
+    
+        // Handle opponentDisconnected event
+        newSocket.on('opponentDisconnected', (data) => {
+          setStatus(data.message);
+          setGameId(null);
+          setOpponent(null);
+          setMoves([]);
+        });
+    
+        // Cleanup on unmount
+        return () => {
+          newSocket.disconnect();
+        };
+      }, [user, opponent]);
+    
+      const handleFindGame = () => {
+        if (socket) {
+          socket.emit('findGame');
+          setStatus('Searching for a game...');
+        }
+      };
+    
+   
+    
+      const handleLogoutAndDisconnect = async () => {
+        await logout();
+        navigate('/login');
+      };
+    
+    
+    
+   
     async function saveBoard() {
         const url = 'http://localhost:3001/';
         try {
@@ -258,6 +352,15 @@ function Main() {
             const newPositions = prevPositions.map(row => [...row]);
             newPositions[x][y] = piece;
             newPositions[selectedPiece.x][selectedPiece.y] = null;
+            const moveData = {
+                beforeX: selectedPiece.x,
+                beforeY: selectedPiece.y,
+                x,
+                y,
+                piece,
+                turn
+            }
+            socket.emit('makeMove', moveData);
 
             if (moveType === "left") {
                 // Move rook during castling
@@ -325,7 +428,7 @@ function Main() {
     return (
         <>
             <div id='app'>
-                <Board
+                {gameId && <Board
                     blackKing={blackKing}
                     whiteKing={whiteKing}
                     setKingPos={null} // Removed as kingPos is no longer used
@@ -336,7 +439,7 @@ function Main() {
                     setSelected={setSelected}
                     setSelectedPiece={setSelectedPiece}
                     selectedPiece={selectedPiece}
-                />
+                />}
                 <button id='reset' onClick={reset}>Reset</button>
                 <button id='save' onClick={saveBoard}>Save</button>
                 <Link href="http://localhost:3001/games">
