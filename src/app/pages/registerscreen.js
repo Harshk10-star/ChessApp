@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react';
 import axios from '../utils/axiosConfig';
-import { Link, useNavigate } from 'react-router-dom';
-
+import Link from 'next/link'
+import { useRouter } from 'next/router'
 const RegisterScreen = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
+
 
   // State variables for form inputs and feedback messages
   const [username, setUsername] = useState('');
@@ -41,7 +42,7 @@ const RegisterScreen = () => {
         setSuccess('Registration successful! Redirecting to login...');
         // Redirect to login after a short delay
         setTimeout(() => {
-          navigate('/login');
+         router.push('/loginscreen');
         }, 2000);
       } else {
         setError(response.data.message || 'Registration failed.');
@@ -99,7 +100,7 @@ const RegisterScreen = () => {
         </button>
       </form>
       <p>
-        Already have an account? <Link to="/login">Login here</Link>.
+        Already have an account? <Link href="/loginscreen">Login here</Link>.
       </p>
     </div>
   );

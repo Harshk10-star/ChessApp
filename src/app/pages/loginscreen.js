@@ -2,12 +2,12 @@
 
 import React, { useState, useContext } from 'react';
 import axios from '../utils/axiosConfig';
-import { Link, useNavigate } from 'react-router-dom';
+import Link from 'next/link'
 import { AuthContext } from '../context/AuthContext';
 import { io } from 'socket.io-client';
-
+import { useRouter } from 'next/router'
 const LoginScreen = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { setUser } = useContext(AuthContext);
 
   // State variables for form inputs and feedback messages
@@ -57,7 +57,7 @@ const LoginScreen = () => {
           socket.on('authenticated', (data) => {
             if (data.success) {
               console.log('Socket authenticated successfully.');
-              navigate('/dashboard');
+              router.push('/game');
             } else {
               setError(data.message || 'Socket authentication failed.');
             }
@@ -113,7 +113,7 @@ const LoginScreen = () => {
         </button>
       </form>
       <p>
-        Don't have an account? <Link to="/register">Register here</Link>.
+        Don't have an account? <Link href="registerscreen">Register here</Link>.
       </p>
     </div>
   );

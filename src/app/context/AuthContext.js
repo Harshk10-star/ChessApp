@@ -1,5 +1,6 @@
 // src/context/AuthContext.js
 
+"use client";
 import React, { createContext, useState, useEffect } from 'react';
 import axios from '../utils/axiosConfig';
 

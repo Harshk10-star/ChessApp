@@ -2,23 +2,26 @@
 "use client";
 import React, { useState, useEffect, useContext } from 'react';
 import Link from 'next/link';
-import axios from 'axios';
-import './App.css';
-import Board from './components/Board';
-import check from './piece-logic/Check';
-import pawnValid from './piece-logic/PawnValid';
-import rookValid from './piece-logic/RookValid';
-import knightValid from './piece-logic/KnightValid';
-import kingValid from './piece-logic/KingValid';
-import bishopValid from './piece-logic/BishopValid';
-import queenValid from './piece-logic/QueenValid';
-import PromotionPawn from './components/PromotionPawn';
-import checkMate from './piece-logic/CheckMate';
-import { useNavigate } from 'react-router-dom';
-import { AuthContext } from './context/AuthContext';
+import axios from "../utils/axiosConfig";
+import '../App.css';
+import Board from '../components/Board';
+import check from '../piece-logic/Check';
+import pawnValid from '../piece-logic/PawnValid';
+import rookValid from '../piece-logic/RookValid';
+import knightValid from '../piece-logic/KnightValid';
+import kingValid from '../piece-logic/KingValid';
+import bishopValid from '../piece-logic/BishopValid';
+import queenValid from '../piece-logic/QueenValid';
+import PromotionPawn from '../components/PromotionPawn';
+import checkMate from '../piece-logic/CheckMate';
+import { useRouter } from 'next/router';
+import { AuthContext } from '../context/AuthContext';
 import { io } from 'socket.io-client';
 
 function Game() {
+
+    const router = useRouter();
+
     const [promotion, setPromotion] = useState(false); // Initially no promotion
     const [selected, setSelected] = useState(false);
     const [selectedPiece, setSelectedPiece] = useState(null);
@@ -120,7 +123,7 @@ function Game() {
     
       const handleLogoutAndDisconnect = async () => {
         await logout();
-        navigate('/login');
+        router.push('/login');
       };
     
     
@@ -245,7 +248,7 @@ function Game() {
         }
 
         const pieceType = piece.substring(1);
-        setMoves(pieceType, x, y, piece);
+        setMove(pieceType, x, y, piece);
     }
 
     /**
@@ -256,7 +259,7 @@ function Game() {
      * @param {number} y - The target y-coordinate.
      * @param {string|null} piece - Additional information (e.g., castling direction).
      */
-    function setMoves(p, x, y, piece) {
+    function setMove(p, x, y, piece) {
         
         switch (p) {
             case "queen":

@@ -1,21 +1,24 @@
-// src/components/PrivateRoute.js
+// src/app/components/PrivateRoute.js
 
-import React, { useContext } from 'react';
-import { Navigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+'use client'; // Ensure this is a Client Component in Next.js 13
+
+import { useRouter } from 'next/navigation';
+import { useEffect, useContext } from 'react';
+import { AuthContext } from '../context/AuthContext'; // Ensure you have AuthContext set up
 
 const PrivateRoute = ({ children }) => {
-  const { user, loading } = useContext(AuthContext);
+  const { user } = useContext(AuthContext); // Assuming AuthContext provides 'user'
+  const router = useRouter();
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  useEffect(() => {
+    if (!user) {
+      // Redirect to login if not authenticated
+      router.push('/login');
+    }
+  }, [user, router]);
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return children;
+  // If user exists, render the children components
+  return user ? children : null;
 };
 
 export default PrivateRoute;
