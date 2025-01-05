@@ -1,2 +1,10 @@
 2025-01-03T19:46:36.177Z [INFO]: Server is running (Express + Socket.io) on port 3001
 2025-01-03T19:46:36.198Z [INFO]: Connected to Redis successfully.
+2025-01-05T00:35:09.533Z [INFO]: Server is running (Express + Socket.io) on port 3001
+2025-01-05T00:35:09.543Z [INFO]: Connected to Redis successfully.
+2025-01-05T01:15:38.432Z [ERROR]: Error Creating User: Error: Unknown database 'chess_db'
+2025-01-05T01:44:28.567Z [INFO]: Server is running (Express + Socket.io) on port 3001
+2025-01-05T01:44:28.576Z [INFO]: Connected to Redis successfully.
+2025-01-05T01:44:42.133Z [ERROR]: Error Creating User: Error: Duplicate entry 'harshypoo' for key 'users.username'
+2025-01-05T02:15:35.447Z [INFO]: Server is running (Express + Socket.io) on port 3001
+2025-01-05T02:15:35.462Z [INFO]: Connected to Redis successfully.

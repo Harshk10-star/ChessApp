@@ -1,20 +1,21 @@
-// src/screens/RegisterScreen.js
+// src/screens/LoginScreen.js
 
-import React, { useState } from 'react';
-import axios from '../utils/axiosConfig';
+import React, { useState, useContext } from 'react';
+import axios from '../src/app/utils/axiosConfig';
 import Link from 'next/link'
-import { useRouter } from 'next/router'
-const RegisterScreen = () => {
+import { AuthContext } from '../src/app/context/AuthContext';
+import { io } from 'socket.io-client';
+import { useRouter } from 'next/router';
+const LoginScreen = () => {
   const router = useRouter();
-
+  const { setUser } = useContext(AuthContext);
 
   // State variables for form inputs and feedback messages
-  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
 
   // Handler for form submission
   const handleSubmit = async (e) => {
@@ -22,55 +23,43 @@ const RegisterScreen = () => {
 
     // Reset messages
     setError('');
-    setSuccess('');
 
     // Basic validation
-    if (!username || !email || !password) {
+    if (!email || !password) {
       setError('Please fill in all fields.');
       return;
     }
 
+    setLoading(true);
+
     try {
-      // Send POST request to the backend to create a new user
-      const response = await axios.post('/user', {
-        username,
+      // Send POST request to the backend to authenticate the user
+      const response = await axios.post('/login', {
         email,
         password,
       });
 
       if (response.data.success) {
-        setSuccess('Registration successful! Redirecting to login...');
-        // Redirect to login after a short delay
-        setTimeout(() => {
-         router.push('/loginscreen');
-        }, 2000);
-      } else {
-        setError(response.data.message || 'Registration failed.');
+        // Fetch user data after login
+        const userResponse = await axios.get('/me');
+        if (userResponse.data.success) {
+          setUser(userResponse.data.user);
+          router.push('/game');
+        }
       }
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.error || 'An error occurred during registration.');
+      setError(err.response?.data?.message || 'An error occurred during login.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="auth-container">
-      <h2>Register</h2>
+      <h2>Login</h2>
       {error && <div className="error-message">{error}</div>}
-      {success && <div className="success-message">{success}</div>}
       <form onSubmit={handleSubmit} className="auth-form">
-        <div className="form-group">
-          <label htmlFor="username">Username:</label>
-          <input
-            type="text"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Enter your username"
-            required
-          />
-        </div>
-
         <div className="form-group">
           <label htmlFor="email">Email:</label>
           <input
@@ -90,20 +79,20 @@ const RegisterScreen = () => {
             id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter a strong password"
+            placeholder="Enter your password"
             required
           />
         </div>
 
-        <button type="submit" className="auth-button">
-          Register
+        <button type="submit" className="auth-button" disabled={loading}>
+          {loading ? 'Logging in...' : 'Login'}
         </button>
       </form>
       <p>
-        Already have an account? <Link href="/loginscreen">Login here</Link>.
+        Don't have an account? <Link href="registerscreen">Register here</Link>.
       </p>
     </div>
   );
 };
 
-export default RegisterScreen;
+export default LoginScreen;

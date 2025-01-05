@@ -9,25 +9,6 @@ export const AuthContext = createContext();
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await axios.get('/me');
-        if (response.data.success) {
-          setUser(response.data.user);
-        }
-      } catch (error) {
-        console.error('Failed to fetch user:', error);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
   const login = async (email, password) => {
     try {
       const response = await axios.post('/login', { email, password });

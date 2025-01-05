@@ -80,7 +80,7 @@ const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || 'Root1234',
-  database: process.env.DB_NAME || 'chess_db',
+  database: process.env.DB_NAME || 'chess_app',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -99,8 +99,10 @@ app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(cors({
   origin: 'http://localhost:3000', // Replace with your frontend URL
+  methods: ['GET', 'POST'],
   credentials: true,
 }));
+
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -204,7 +206,7 @@ app.post('/login', async (req, res) => {
     // Set JWT in HTTP-only Cookie
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Set to true in production
+      secure: true,//process.env.NODE_ENV === 'production', // Set to true in production
       sameSite: 'Strict',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     });
@@ -403,7 +405,7 @@ const serverInstance = http.createServer(app);
 
 // Initialize Socket.io with the HTTP server
 const io = new Server(serverInstance, {
-  cors: { origin: '*' } // Replace '*' with your frontend URL in production for security
+  cors: { origin: 'http://localhost:3000' } // Replace '*' with your frontend URL in production for security
 });
 
 // In-memory storage for games and user sockets
@@ -476,11 +478,11 @@ io.on('connection', (socket) => {
         if (matchedSocketId) {
           io.to(matchedSocketId).emit('gameMatched', { gameId, opponent: userId });
           // Join Both Sockets to a Room
-          io.to(matchedSocketId).socketsJoin(`game_${gameId}`);
+         // io.to(matchedSocketId).socketsJoin(`game_${gameId}`);
         }
 
         io.to(socket.id).emit('gameMatched', { gameId, opponent: matchedUserId });
-        socket.join(`game_${gameId}`);
+        //socket.join(`game_${gameId}`);
 
         logger.info(`Game created: ${gameId} between User ${userId} and User ${matchedUserId}`);
       } else {

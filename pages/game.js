@@ -2,20 +2,20 @@
 "use client";
 import React, { useState, useEffect, useContext } from 'react';
 import Link from 'next/link';
-import axios from "../utils/axiosConfig";
-import '../App.css';
-import Board from '../components/Board';
-import check from '../piece-logic/Check';
-import pawnValid from '../piece-logic/PawnValid';
-import rookValid from '../piece-logic/RookValid';
-import knightValid from '../piece-logic/KnightValid';
-import kingValid from '../piece-logic/KingValid';
-import bishopValid from '../piece-logic/BishopValid';
-import queenValid from '../piece-logic/QueenValid';
-import PromotionPawn from '../components/PromotionPawn';
-import checkMate from '../piece-logic/CheckMate';
+import axios from "../src/app/utils/axiosConfig";
+import '../src/app/App.css';
+import Board from '../src/app/components/Board';
+import check from '../src/app/piece-logic/Check';
+import pawnValid from '../src/app/piece-logic/PawnValid';
+import rookValid from '../src/app/piece-logic/RookValid';
+import knightValid from '../src/app/piece-logic/KnightValid';
+import kingValid from '../src/app/piece-logic/KingValid';
+import bishopValid from '../src/app/piece-logic/BishopValid';
+import queenValid from '../src/app/piece-logic/QueenValid';
+import PromotionPawn from '../src/app/components/PromotionPawn';
+import checkMate from '../src/app/piece-logic/CheckMate';
 import { useRouter } from 'next/router';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext } from '../src/app/context/AuthContext';
 import { io } from 'socket.io-client';
 
 function Game() {
@@ -36,7 +36,6 @@ function Game() {
     const [whiteCastle, setWhiteCastle] = useState(false);
     const [blackCastle, setBlackCastle] = useState(false);
 
-    const navigate = useNavigate();
     const { user, logout } = useContext(AuthContext);
     const [socket, setSocket] = useState(null);
     const [status, setStatus] = useState('');
@@ -445,6 +444,8 @@ function Game() {
                 />}
                 <button id='reset' onClick={reset}>Reset</button>
                 <button id='save' onClick={saveBoard}>Save</button>
+                <button id='reset' onClick={handleFindGame}>Find games</button>
+                {status}
                 <Link href="http://localhost:3001/games">
                     Get Games
                 </Link>
