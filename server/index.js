@@ -207,8 +207,9 @@ app.post('/login', async (req, res) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: true,//process.env.NODE_ENV === 'production', // Set to true in production
-      sameSite: 'Strict',
+      sameSite: 'Lax',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      path: '/'
     });
 
     return res.status(200).json({
@@ -406,6 +407,40 @@ const serverInstance = http.createServer(app);
 // Initialize Socket.io with the HTTP server
 const io = new Server(serverInstance, {
   cors: { origin: 'http://localhost:3000' } // Replace '*' with your frontend URL in production for security
+});
+
+const cookie = require('cookie'); // Ensure you have imported the 'cookie' module
+
+io.use(async (socket, next) => {
+  try {
+    const cookieHeader = socket.handshake.headers.cookie;
+    if (!cookieHeader) {
+      logger.warn('Socket.IO connection rejected: No cookie header.');
+      return next(new Error('Authentication error: No token provided.'));
+    }
+
+    const cookies = cookie.parse(cookieHeader);
+    const token = cookies.token;
+
+    if (!token) {
+      logger.warn('Socket.IO connection rejected: No token found in cookies.');
+      return next(new Error('Authentication error: No token provided.'));
+    }
+
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+      if (err) {
+        logger.warn(`Socket.IO authentication failed: ${err.message}`);
+        return next(new Error('Authentication error: Invalid token.'));
+      }
+      socket.userId = decoded.userId;
+      userSockets[socket.userId] = socket.id;
+      logger.info(`Socket.IO authenticated for user ID: ${socket.userId}`);
+      next();
+    });
+  } catch (error) {
+    logger.error(`Socket.IO Authentication Error: ${error}`);
+    next(new Error('Authentication error'));
+  }
 });
 
 // In-memory storage for games and user sockets

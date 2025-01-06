@@ -8,3 +8,9 @@
 2025-01-05T01:44:42.133Z [ERROR]: Error Creating User: Error: Duplicate entry 'harshypoo' for key 'users.username'
 2025-01-05T02:15:35.447Z [INFO]: Server is running (Express + Socket.io) on port 3001
 2025-01-05T02:15:35.462Z [INFO]: Connected to Redis successfully.
+2025-01-05T02:28:31.115Z [INFO]: Server is running (Express + Socket.io) on port 3001
+2025-01-05T02:28:31.122Z [INFO]: Connected to Redis successfully.
+2025-01-05T22:51:59.889Z [INFO]: Server is running (Express + Socket.io) on port 3001
+2025-01-05T22:51:59.932Z [INFO]: Connected to Redis successfully.
+2025-01-05T22:57:39.793Z [INFO]: Server is running (Express + Socket.io) on port 3001
+2025-01-05T22:57:39.823Z [INFO]: Connected to Redis successfully.
