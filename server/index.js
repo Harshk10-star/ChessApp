@@ -488,12 +488,13 @@ io.on('connection', (socket) => {
 
   // Handle 'findGame' Event
   socket.on('findGame', async () => {
+    
     const userId = socket.userId;
     if (!userId) {
       socket.emit('error', { message: 'User not authenticated.' });
       return;
     }
-
+    logger.info(`${socket.id} passed`); 
     try {
       const matchedUserId = await redisClient.lPop('waitingPlayers');
 
