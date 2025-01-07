@@ -406,7 +406,7 @@ const serverInstance = http.createServer(app);
 
 // Initialize Socket.io with the HTTP server
 const io = new Server(serverInstance, {
-  cors: { origin: 'http://localhost:3000' } // Replace '*' with your frontend URL in production for security
+  cors: { origin: 'http://localhost:3000', credentials:true } // Replace '*' with your frontend URL in production for security
 });
 
 const cookie = require('cookie'); // Ensure you have imported the 'cookie' module

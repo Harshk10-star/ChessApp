@@ -47,7 +47,7 @@ function Game() {
     useEffect(() => {
         // Initialize Socket.io client
         const newSocket = io('http://localhost:3001', {
-          withCredentials: true,
+          withCredentials: true
         });
     
         setSocket(newSocket);
