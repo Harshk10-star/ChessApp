@@ -47,12 +47,59 @@ function Game() {
     useEffect(() => {
         // Initialize Socket.io client
         const newSocket = io('http://localhost:3001', {
-          withCredentials: true
+            withCredentials: true,
+            transports: ['websocket'],
         });
     
         setSocket(newSocket);
     
+        // Attach event listeners
+        newSocket.on('gameMatched', (data) => {
+            const { gameId, opponent } = data;
+            newSocket.emit('joinRoom', { gameId });
+            setGameId(gameId);
+            setOpponent(opponent);
+            setStatus(`Matched with ${opponent}. Game ID: ${gameId}`);
+        });
+    
+        newSocket.on('waitingForMatch', (data) => {
+            setStatus(data.message);
+        });
+    
+        newSocket.on('opponentMove', (data) => {
+            const { move } = data;
+            setMoves((prevMoves) => [...prevMoves, { player: opponent, move }]);
+        });
+    
+        newSocket.on('gameEnded', (data) => {
+            const { winnerId } = data;
+            if (winnerId === user.userId) {
+                setStatus('You won the game!');
+            } else {
+                setStatus('You lost the game.');
+            }
+            setGameId(null);
+            setOpponent(null);
+            setMoves([]);
+        });
+    
+        newSocket.on('opponentDisconnected', (data) => {
+            setStatus(data.message);
+            setGameId(null);
+            setOpponent(null);
+            setMoves([]);
+        });
+    
+        // Cleanup on unmount
+        return () => {
+            newSocket.disconnect();
+        };
+    }, []); // Empty dependency array ensures this runs once on mount
+    
+       
+    
         // Authenticate the socket connection
+        /*
         newSocket.emit('authenticate', { token: null }); // Token is sent via cookies
     
         // Handle authentication response
@@ -63,9 +110,9 @@ function Game() {
             console.error('Socket authentication failed:', data.message);
           }
         });
-    
+         */
         // Handle gameMatched event
-        newSocket.on('gameMatched', (data) => {
+       /* socket.on('gameMatched', (data) => {
           const { gameId, opponent } = data;
           newSocket.emit('joinRoom', {gameId});
           setGameId(gameId);
@@ -74,18 +121,18 @@ function Game() {
         });
     
         // Handle waitingForMatch event
-        newSocket.on('waitingForMatch', (data) => {
+        socket.on('waitingForMatch', (data) => {
           setStatus(data.message);
         });
     
         // Handle opponentMove event
-        newSocket.on('opponentMove', (data) => {
+        socket.on('opponentMove', (data) => {
           const { move } = data;
           setMoves((prevMoves) => [...prevMoves, { player: opponent, move }]);
         });
     
         // Handle gameEnded event
-        newSocket.on('gameEnded', (data) => {
+        socket.on('gameEnded', (data) => {
           const { gameId, winnerId } = data;
           if (winnerId === user.userId) {
             setStatus('You won the game!');
@@ -98,19 +145,15 @@ function Game() {
         });
     
         // Handle opponentDisconnected event
-        newSocket.on('opponentDisconnected', (data) => {
+        socket.on('opponentDisconnected', (data) => {
           setStatus(data.message);
           setGameId(null);
           setOpponent(null);
           setMoves([]);
         });
-    
+    */
         // Cleanup on unmount
-        return () => {
-          newSocket.disconnect();
-        };
-      }, [user, opponent]);
-    
+     
       const handleFindGame = () => {
         if (socket) {
           socket.emit('findGame');

@@ -406,7 +406,8 @@ const serverInstance = http.createServer(app);
 
 // Initialize Socket.io with the HTTP server
 const io = new Server(serverInstance, {
-  cors: { origin: 'http://localhost:3000', credentials:true } // Replace '*' with your frontend URL in production for security
+  cors: { origin: 'http://localhost:3000', credentials:true },
+  transports: ['websocket'], // Replace '*' with your frontend URL in production for security
 });
 
 const cookie = require('cookie'); // Ensure you have imported the 'cookie' module
@@ -484,11 +485,12 @@ io.use(async (socket, next) => {
 
 // Socket.io Connection Event
 io.on('connection', (socket) => {
+  console.log("connectioed")
   logger.info(`User connected: ${socket.userId} (Socket ID: ${socket.id})`);
 
   // Handle 'findGame' Event
   socket.on('findGame', async () => {
-    
+    logger.info(`In findGame ${socket.userId}`)
     const userId = socket.userId;
     if (!userId) {
       socket.emit('error', { message: 'User not authenticated.' });
