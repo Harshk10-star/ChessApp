@@ -52,8 +52,16 @@ function Game() {
         });
     
         setSocket(newSocket);
-    
+        console.log("IN here". newSocket !== null);
         // Attach event listeners
+        newSocket.on("connect_error", (err) => {
+            console.log(err.message);
+          
+            console.log(err.description);
+          
+            console.log(err.context);
+          });
+
         newSocket.on('gameMatched', (data) => {
             const { gameId, opponent } = data;
             newSocket.emit('joinRoom', { gameId });

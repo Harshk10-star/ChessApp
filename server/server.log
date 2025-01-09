@@ -19,3 +19,45 @@
 2025-01-08T03:41:50.938Z [INFO]: Socket.IO authenticated for user ID: 1
 2025-01-08T03:42:30.113Z [INFO]: Socket.IO authenticated for user ID: 1
 2025-01-08T03:46:24.477Z [INFO]: Socket.IO authenticated for user ID: 1
+2025-01-08T03:49:07.189Z [INFO]: Server is running (Express + Socket.io) on port 3001
+2025-01-08T03:49:07.199Z [INFO]: Connected to Redis successfully.
+2025-01-08T03:51:12.228Z [INFO]: Socket.IO authenticated for user ID: 1
+2025-01-09T02:33:12.115Z [INFO]: Server is running (Express + Socket.io) on port 3001
+2025-01-09T02:33:12.129Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:12.139Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:12.205Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:12.316Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:12.476Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:12.693Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:12.960Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:13.269Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:13.626Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:14.045Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:14.499Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:15.011Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:15.528Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:16.040Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:16.548Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:17.066Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:17.583Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:18.095Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:18.597Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:19.113Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:19.619Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:20.123Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:20.640Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:21.158Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:21.661Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:22.176Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:22.684Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:23.197Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:23.702Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:24.204Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:24.708Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:25.224Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:25.727Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:26.243Z [ERROR]: Redis Client Error: AggregateError
+2025-01-09T02:33:40.808Z [INFO]: Server is running (Express + Socket.io) on port 3001
+2025-01-09T02:33:40.817Z [INFO]: Connected to Redis successfully.
+2025-01-09T02:36:44.507Z [INFO]: Socket.IO authenticated for user ID: 1
+2025-01-09T03:15:45.112Z [INFO]: Socket.IO authenticated for user ID: 1
