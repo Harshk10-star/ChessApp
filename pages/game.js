@@ -52,7 +52,6 @@ function Game() {
         });
     
         setSocket(newSocket);
-        console.log("IN here". newSocket !== null);
         // Attach event listeners
         newSocket.on("connect_error", (err) => {
             console.log(err.message);
